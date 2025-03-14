@@ -2,7 +2,7 @@
 
 set -exv 
 
-# add other variables and ovverrides
+# add other variables and overrides
 LOCAL_REGISTRY=${TEST_REGISTRY:-localhost:5000}
 
 
