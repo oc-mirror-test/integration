@@ -13,11 +13,11 @@ To build the container for local-dev
 Execute the following command line
 
 ```bash
-# this will build from the main brancha
+# this will build from the main branch
 # parameters are 
-# $1 branch
-# $2 delete oc-mirror directory
-# $3 pr (number)
+#  $1 branch
+#  $2 delete oc-mirror directory
+#  $3 pr (number)
 local-dev/clone-build.sh main true 
 
 # to build from a pr
@@ -39,6 +39,7 @@ podman images
 # note the mount points 
 # - credentials ~/.docker
 # - images (for host disk)
+mkdir images
 podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./images/:/artifacts/workingdir a3e3773b0627  bash
 
 # do a mirror to disk
@@ -49,3 +50,12 @@ oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
 oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://localhost:5000/test --v2 --dest-tls-verify=false
 ```
 
+To execute a flow use the following command
+
+```bash
+# mount the scripts folder for easier debugging
+podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./images/:/artifacts/workingdir -v ./scripts/:artfifacts/scripts a3e3773b0627  bash
+# this will do a a mirror-to-disk and disk-to-mirror
+# also assumes you have an external registry (localhost:5000) running
+./scripts/flow-controller.sh all_happy_path
+```

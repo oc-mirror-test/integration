@@ -1,0 +1,26 @@
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder_rhel9
+WORKDIR ./oc-mirror/v2
+COPY . .
+RUN make build-static
+
+FROM registry.redhat.io/ubi9-minimal@sha256:30bbd445046a3a63f5f5557a3c67dee74e3c8e7855eb0347630b020f3689823f
+COPY --from=builder_rhel9 ./oc-mirror/v2/build/oc-mirror /usr/bin/oc-mirror
+
+RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/workingdir && chmod -R 777 /artifacts
+RUN mkdir -p /root/.docker
+RUN mkdir -p /root/.oc-mirror/.cache
+
+COPY uid_entrypoint.sh /artifacts
+COPY scripts /artifacts/scripts
+COPY isc /artifacts/isc
+
+WORKDIR /artifacts
+
+LABEL io.k8s.display-name="oc-mirror-integrations-tests" \
+      io.k8s.description="Integration tests for oc-mirror v2 plugin." \
+      io.openshift.tags="cli,mirror" \
+      maintainer="luzuccar@redhat.com"
+
+ENTRYPOINT ["./uid_entrypoint.sh"]
+
+
