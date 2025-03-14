@@ -12,7 +12,6 @@ RUN mkdir -p /root/.docker
 RUN mkdir -p /root/.oc-mirror/.cache
 COPY uid_entrypoint.sh /artifacts
 
-#WORKDIR /artifacts
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc
 

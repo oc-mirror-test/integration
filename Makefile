@@ -29,7 +29,7 @@ clean:
 	go clean ./...
 
 container:
-	podman build -t  ${REGISTRY_BASE}/${IMAGE_NAME}:${IMAGE_VERSION} -f containerfile-rhel9-dev
+	podman build -t  ${REGISTRY_BASE}/${IMAGE_NAME}:${IMAGE_VERSION}-dev -f containerfile-rhel9-dev
 
 push:
-	podman push --authfile=${HOME}/.docker/config.json ${REGISTRY_BASE}/${IMAGE_NAME}:${IMAGE_VERSION} 
+	podman push --authfile=${HOME}/.docker/config.json ${REGISTRY_BASE}/${IMAGE_NAME}:${IMAGE_VERSION}-dev 

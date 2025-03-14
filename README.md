@@ -8,6 +8,19 @@ and with the scripts and isc folders copied into the binary
 
 ## Usage
 
+### Build and push the artifacts container
+
+```bash
+
+# build
+podman build -t quay.io/oc-mirror/integrations-tests-artifacts:v0.0.1 -f containerfile-rhel9-artifacts
+
+# push 
+podman push  quay.io/oc-mirror/integrations-tests-artifacts:v0.0.1
+```
+
+### Build the local-dev container for testing
+
 To build the container for local-dev
 
 Execute the following command line
@@ -33,7 +46,8 @@ podman rmi -f $(podman images | awk '{print $1":"$3}' | grep none | cut -d':' -f
 # list all images 
 podman images 
 
-# use the image tag for quay.io/oc-mirror/integration-tests:v0.0.1
+# use the image tag for quay.io/oc-mirror/integration-tests:v0.0.1-dev
+# or just use the full name i.e quay.io/oc-mirror/integrations-tests-artifacts:v0.0.1-dev
 
 # execute the container
 # note the mount points 
