@@ -1,19 +1,19 @@
 FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder_rhel9
-WORKDIR /go/src/github.com/openshift/oc-mirror/v2
+WORKDIR /go/src/github.com/openshift/oc-mirror
 COPY . .
 RUN make build-static
 
 FROM quay.io/oc-mirror/integration-tests-artifacts:v0.0.1 as embedd
 
 FROM registry.redhat.io/ubi9-minimal@sha256:30bbd445046a3a63f5f5557a3c67dee74e3c8e7855eb0347630b020f3689823f
-COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/v2/build/oc-mirror /usr/bin/oc-mirror
+COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/v2/bin/oc-mirror /usr/bin/oc-mirror
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/workingdir && chmod -R 777 /artifacts
 RUN mkdir -p /root/.docker
 RUN mkdir -p /root/.oc-mirror/.cache
-COPY uid_entrypoint.sh /artifacts
 
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc
+COPY --from=embedd artifacts/uid_entrypoint.sh /artifacts
 
 WORKDIR /artifacts
 

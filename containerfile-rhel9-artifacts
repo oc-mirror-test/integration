@@ -3,6 +3,7 @@ RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc
 RUN chmod -R 755 /artifacts
 COPY ./scripts /artifacts/scripts
 COPY ./isc /artifacts/isc
+COPY uid_entrypoint.sh artifacts/
 LABEL io.k8s.display-name="oc-mirror-integrations-tests-artifacts" \
       io.k8s.description="Integration tests for oc-mirror v2 plugin." \
       io.openshift.tags="cli,mirror" \
