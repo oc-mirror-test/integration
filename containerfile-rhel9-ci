@@ -1,7 +1,7 @@
 FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder_rhel9
 WORKDIR /go/src/github.com/openshift/oc-mirror
 COPY . .
-RUN make build-static
+RUN DISABLE_CGO=1 CGO_ENABLED=0 make build
 
 FROM quay.io/oc-mirror/integration-tests-artifacts:v0.0.1 as embedd
 
