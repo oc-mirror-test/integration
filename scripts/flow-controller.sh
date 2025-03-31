@@ -4,29 +4,37 @@ set -exv
 
 # add other variables and overrides
 LOCAL_REGISTRY=${TEST_REGISTRY:-localhost:5000}
+FLAGS=""
+
+if [ "${LOCAL_REGISTRY}" == "localhost:5000" ];
+then
+  FLAGS="${FLAGS} --dest-tls-verify=false"
+fi
 
 
 # declare functions
 all_happy_path () {
   
-  # we can leave the --v2 flag out but this is included incase a full binary was used
+  # mirror-to-disk
   oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
   # echo -e "exit => $?"
 
   # this creates an error regarding graph data - need to investigate it
   # mkdir new-workingdir
   # cp -r workingdir/ new-workingdir/
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY}/integration-tests --v2 --dest-tls-verify=false
+  # disk-to-mirror
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
 }
 
 m2d_happy_path () {
+  # mirror-to-disk
   oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
   # echo -e "exit => $?"
 }
 
 d2m_happy_path () {
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY}/integration-tests --v2 --dest-tls-verify=false
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
 }
 
