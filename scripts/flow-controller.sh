@@ -3,10 +3,10 @@
 set -exv 
 
 # add other variables and overrides
-LOCAL_REGISTRY=${TEST_REGISTRY:-localhost:5000}
+REGISTRY=${TEST_REGISTRY:-localhost:5000}
 FLAGS=""
 
-if [ "${LOCAL_REGISTRY}" == "localhost:5000" ];
+if [ "${REGISTRY}" == "localhost:5000" ];
 then
   FLAGS="${FLAGS} --dest-tls-verify=false"
 fi
@@ -14,7 +14,10 @@ fi
 
 # declare functions
 all_happy_path () {
-  
+
+  # start the registry in the background
+  registry serve registry-config.yaml /dev/null 2>&1 &
+
   # mirror-to-disk
   oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
   # echo -e "exit => $?"
@@ -23,7 +26,7 @@ all_happy_path () {
   # mkdir new-workingdir
   # cp -r workingdir/ new-workingdir/
   # disk-to-mirror
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY} --v2 ${FLAGS}
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
 }
 
@@ -34,7 +37,7 @@ m2d_happy_path () {
 }
 
 d2m_happy_path () {
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${LOCAL_REGISTRY} --v2 ${FLAGS}
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
 }
 

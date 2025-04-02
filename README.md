@@ -8,16 +8,41 @@ and with the scripts and isc folders copied into the binary
 
 ## Usage
 
+Befor building the artifacts container we need to include the distribution/distribution (registry) binary in the container
+
+To do this, first clone the distribution project 
+
+```bash
+
+git clone git@github.com:distribution/distribution.git
+
+cd  distribution
+
+DISABLE_CGO=1 CGO_ENABLED=0  make binaries
+```
+
+Once the binaries have been created copoy the registry binary to this directory
+
+```bash
+
+cd oc-mirror-test/integration
+
+cp <path-to-distribution>/distrubtion/bin/registry .
+
+```
+
 ### Build and push the artifacts container
 
 ```bash
 
 # build
-podman build -t quay.io/oc-mirror/integrations-tests-artifacts:v0.0.1 -f containerfile-rhel9-artifacts
+podman build -t quay.io/oc-mirror/integration-tests-artifacts:v0.0.1 -f containerfile-rhel9-artifacts
 
 # push 
-podman push  quay.io/oc-mirror/integrations-tests-artifacts:v0.0.1
+podman push  quay.io/oc-mirror/integration-tests-artifacts:v0.0.1
 ```
+
+The following step are for local dev testing and can be ignored 
 
 ### Build the local-dev container for testing
 

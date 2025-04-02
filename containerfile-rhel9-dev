@@ -1,5 +1,5 @@
 FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder_rhel9
-WORKDIR ./oc-mirror/v2
+WORKDIR oc-mirror/v2
 COPY . .
 RUN make build-static
 
@@ -13,6 +13,8 @@ RUN mkdir -p /root/.oc-mirror/.cache
 COPY uid_entrypoint.sh /artifacts
 COPY scripts /artifacts/scripts
 COPY isc /artifacts/isc
+COPY registry /usr/bin/registry
+COPy config-example.yaml artifacts/
 
 WORKDIR /artifacts
 

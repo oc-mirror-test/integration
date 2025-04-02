@@ -14,6 +14,8 @@ RUN mkdir -p /root/.oc-mirror/.cache
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc
 COPY --from=embedd artifacts/uid_entrypoint.sh /artifacts
+COPY --from=embedd artifacts/registry-config.yaml /artifacts
+COPY --from=embedd /usr/bin/registry /usr/bin/registry
 
 WORKDIR /artifacts
 
