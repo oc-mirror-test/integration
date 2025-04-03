@@ -16,7 +16,7 @@ fi
 all_happy_path () {
 
   # start the registry in the background
-  registry serve registry-config.yaml /dev/null 2>&1 &
+  registry serve registry-config.yaml > /dev/null 2>&1 &
 
   # mirror-to-disk
   oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2

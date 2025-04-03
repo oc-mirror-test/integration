@@ -9,12 +9,13 @@ COPY --from=builder_rhel9 ./oc-mirror/v2/bin/oc-mirror /usr/bin/oc-mirror
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/workingdir && chmod -R 777 /artifacts
 RUN mkdir -p /root/.docker
 RUN mkdir -p /root/.oc-mirror/.cache
+RUN mkdir -p /root/.cache && chmod -R 777 /root/.cache
 
 COPY uid_entrypoint.sh /artifacts
 COPY scripts /artifacts/scripts
 COPY isc /artifacts/isc
 COPY registry /usr/bin/registry
-COPy config-example.yaml artifacts/
+COPY registry-config.yaml artifacts/
 
 WORKDIR /artifacts
 

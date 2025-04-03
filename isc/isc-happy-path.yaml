@@ -6,8 +6,11 @@ mirror:
     release: quay.io/oc-mirror/release/test-release:latest
   helm:
     repositories:
-    - name: sbo
-      url: https://redhat-developer.github.io/service-binding-operator-helm-chart/
+    - name: podinfo
+      url: https://stefanprodan.github.io/podinfo
+      charts:
+      - name: podinfo
+        version: 5.0.0
   additionalImages:
   - name: quay.io/openshifttest/hello-openshift@sha256:61b8f5e1a3b5dbd9e2c35fd448dc5106337d7a299873dd3a6f0cd8d4891ecc27
   operators:

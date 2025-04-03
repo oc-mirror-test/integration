@@ -10,6 +10,7 @@ COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/v2/bin/oc-mirro
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/workingdir && chmod -R 777 /artifacts
 RUN mkdir -p /root/.docker
 RUN mkdir -p /root/.oc-mirror/.cache
+RUN mkdir -p /root/.cache && chmod -R 777 /root/.cache
 
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc

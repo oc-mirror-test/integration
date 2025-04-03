@@ -40,7 +40,7 @@ cp ../../containerfile-rhel9-dev .
 cp ../../uid_entrypoint.sh .
 cp -r ../../scripts .
 cp -r ../../isc .
-cp ../../config-example.yaml .
+cp ../../registry-config.yaml .
 cp ../../registry .
 
 make container
