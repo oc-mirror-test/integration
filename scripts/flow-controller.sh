@@ -17,6 +17,7 @@ all_happy_path () {
 
   # start the registry in the background
   registry serve registry-config.yaml > /dev/null 2>&1 &
+  PID=$!
 
   # mirror-to-disk
   oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
@@ -28,6 +29,9 @@ all_happy_path () {
   # disk-to-mirror
   oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
+
+  # shut the registry down
+  kill -9 ${PID}
 }
 
 m2d_happy_path () {
@@ -37,8 +41,15 @@ m2d_happy_path () {
 }
 
 d2m_happy_path () {
+  # start the registry in the background
+  registry serve registry-config.yaml > /dev/null 2>&1 &
+  PID=$!
+
   oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
   # echo -e "exit => $?"
+  
+  # shut the registry down
+  kill -9 ${PID}
 }
 
 # enable this when we dont want to exit
