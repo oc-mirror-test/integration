@@ -24,15 +24,8 @@ fi
 
 cd oc-mirror
 
-# cd to v2
-cd v2
-
-# copy all the relevant directories
-rm -rf Makefile
-rm -rf containerfile-rhel9-ci
-cp ../../Makefile .
-cp ../../containerfile-rhel9-ci .
-cp ../../uid_entrypoint.sh .
+cp ../containerfile-rhel9-ci .
+cp ../uid_entrypoint.sh .
 
 podman build -t quay.io/oc-mirror/integration-tests:v0.0.1 -f containerfile-rhel9-ci
 

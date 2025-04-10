@@ -6,7 +6,7 @@ RUN DISABLE_CGO=1 CGO_ENABLED=0 make build
 FROM quay.io/oc-mirror/integration-tests-artifacts:v0.0.1 as embedd
 
 FROM registry.redhat.io/ubi9-minimal@sha256:30bbd445046a3a63f5f5557a3c67dee74e3c8e7855eb0347630b020f3689823f
-COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/v2/bin/oc-mirror /usr/bin/oc-mirror
+COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/bin/oc-mirror /usr/bin/oc-mirror
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/workingdir && chmod -R 777 /artifacts
 RUN mkdir -p /root/.docker
 RUN mkdir -p /root/.oc-mirror/.cache

@@ -14,7 +14,7 @@ clone:
 
 build: 
 	mkdir -p bin
-	go build -o bin ./... 
+	go build -mod=readonly -o bin ./... 
 
 build-static: 
 	mkdir -p bin
