@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi9-minimal@sha256:30bbd445046a3a63f5f5557a3c67dee74e3c8e7855eb0347630b020f3689823f
+FROM registry.redhat.io/ubi9-minimal:latest
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc 
 RUN chmod -R 755 /artifacts
 COPY ./scripts /artifacts/scripts
@@ -6,6 +6,7 @@ COPY ./isc /artifacts/isc
 COPY uid_entrypoint.sh artifacts/
 COPY registry-config.yaml artifacts/
 COPY registry /usr/bin/registry
+COPY ./keys artifacts/keys
 LABEL io.k8s.display-name="oc-mirror-integrations-tests-artifacts" \
       io.k8s.description="Integration tests for oc-mirror v2 plugin." \
       io.openshift.tags="cli,mirror" \

@@ -15,19 +15,26 @@ fi
 # declare functions
 all_happy_path () {
 
+  # override gpg key lookup for releases
+  export OCP_SIGNATURE_VERIFICATION_PK=keys/release-pk.asc
+  mkdir -p workingdir/working-dir/signatures
+  cp -r keys/*f817*  workingdir/working-dir/signatures/
+
   # start the registry in the background
   registry serve registry-config.yaml > /dev/null 2>&1 &
   PID=$!
 
+  echo -e "registry PID ${PID}"
+
   # mirror-to-disk
-  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
+  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2 
   # echo -e "exit => $?"
 
   # this creates an error regarding graph data - need to investigate it
   # mkdir new-workingdir
   # cp -r workingdir/ new-workingdir/
   # disk-to-mirror
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS} 
   # echo -e "exit => $?"
 
   # shut the registry down
@@ -36,7 +43,7 @@ all_happy_path () {
 
 m2d_happy_path () {
   # mirror-to-disk
-  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2
+  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2 
   # echo -e "exit => $?"
 }
 
@@ -45,7 +52,7 @@ d2m_happy_path () {
   registry serve registry-config.yaml > /dev/null 2>&1 &
   PID=$!
 
-  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS}
+  oc-mirror --config isc/isc-happy-path.yaml --from file://workingdir docker://${REGISTRY} --v2 ${FLAGS} --remove-signatures
   # echo -e "exit => $?"
   
   # shut the registry down

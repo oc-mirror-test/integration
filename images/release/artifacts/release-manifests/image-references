@@ -5,7 +5,7 @@
     "name": "test-release-image",
     "creationTimestamp": "2023-01-24T02:27:38Z",
     "annotations": {
-      "release.openshift.io/from-image-stream": "test-release-image"
+      "release.openshift.io/from-image-stream": "test-image"
     }
   },
   "spec": {
@@ -22,7 +22,7 @@
         },
         "from": {
           "kind": "DockerImage",
-          "name": "quay.io/oc-mirror/release/test-release-image@sha256:d2e7c41f4a824af32ada4dd891e2a474a66f6dadc51f20551635ad212bcd9fa8"
+          "name": "quay.io/oc-mirror/release/test-image:v0.0.1"
         },
         "generation": null,
         "importPolicy": {},

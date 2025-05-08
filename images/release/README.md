@@ -18,7 +18,7 @@ Execute the following command
 
 ```bash
 
-skopeo copy oci:release-payload docker://quay.io/oc-mirror/release/test-release:v0.0.1 
+skopeo copy oci:release-payload docker://quay.io/oc-mirror/release/test-release-index:v0.0.1 
 
 ```
 

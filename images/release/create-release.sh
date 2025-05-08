@@ -14,6 +14,8 @@ sed "s/new-sha/${DIGEST}/g" artifacts/release-manifests/image-references-base > 
 
 rm -rf release-payload/blobs/sha256/*
 
+mkdir -p artifacts/staging
+
 cd artifacts/staging
 
 tar -czvf tmp_file.tar.gz ../release-manifests/
@@ -40,7 +42,7 @@ rm -rf ../config/final.json ../config/tmp.json
 sed "s/SIZE/${CONFIG_SIZE}/g" ../config/index.json > ../config/tmp_index.json
 sed "s/UPDATE_DIGEST/${CONFIG_DIGEST}/g" ../config/tmp_index.json > ../config/final_index.json
 
-cp ../config/68b7387a1bc2b5543496ca39c5d446e3f39bd1fd4c4a63883e94330865a30c9e ../../release-payload/blobs/sha256/
+cp ../config/8366d414d18526e99f4781ed84a93b5b96ebe464d223e587cf7f705829b27a12 ../../release-payload/blobs/sha256/
 cp ../config/final_index.json ../../release-payload/index.json
 rm -rf ../config/tmp_index.json ../config/final_index.json
 cd ../../

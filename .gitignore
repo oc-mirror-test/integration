@@ -1,3 +1,5 @@
 oc-mirror/
 workingdir/
 registry
+keys/
+release-payload/

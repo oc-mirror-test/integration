@@ -42,6 +42,7 @@ cp -r ../../scripts .
 cp -r ../../isc .
 cp ../../registry-config.yaml .
 cp ../../registry .
+cp -r ../../keys .
 
 make container
 
