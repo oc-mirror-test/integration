@@ -21,7 +21,7 @@ cd  distribution
 DISABLE_CGO=1 CGO_ENABLED=0  make binaries
 ```
 
-Once the binaries have been created copoy the registry binary to this directory
+Once the binaries have been created copy the registry binary to this directory
 
 ```bash
 
@@ -93,7 +93,7 @@ To execute a flow use the following command
 
 ```bash
 # mount the scripts folder for easier debugging
-podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./images/:/artifacts/workingdir -v ./scripts/:artfifacts/scripts a3e3773b0627  bash
+podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./images/:/artifacts/workingdir -v ./scripts/:/artfifacts/scripts a3e3773b0627  bash
 # this will do a a mirror-to-disk and disk-to-mirror
 # also assumes you have an external registry (localhost:5000) running
 ./scripts/flow-controller.sh all_happy_path
