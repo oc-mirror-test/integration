@@ -8,29 +8,6 @@ and with the scripts and isc folders copied into the binary
 
 ## Usage
 
-Befor building the artifacts container we need to include the distribution/distribution (registry) binary in the container
-
-To do this, first clone the distribution project 
-
-```bash
-
-git clone git@github.com:distribution/distribution.git
-
-cd  distribution
-
-DISABLE_CGO=1 CGO_ENABLED=0  make binaries
-```
-
-Once the binaries have been created copy the registry binary to this directory
-
-```bash
-
-cd oc-mirror-test/integration
-
-cp <path-to-distribution>/distrubtion/bin/registry .
-
-```
-
 ### Build and push the artifacts container
 
 ```bash
