@@ -14,10 +14,15 @@ RUN mkdir -p /root/.cache && chmod -R 777 /root/.cache
 
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc
+COPY --from=embedd artifacts/testdata /artifacts/testdata
 COPY --from=embedd artifacts/uid_entrypoint.sh /artifacts
 COPY --from=embedd artifacts/registry-config.yaml /artifacts
 COPY --from=embedd /usr/bin/registry /usr/bin/registry
 COPY --from=embedd /artifacts/keys /artifacts/keys
+COPY --from=embedd /artifacts/integration.test /artifacts/integration.test
+
+ENV ARTIFACTS_DIR=/artifacts
+ENV OC_MIRROR_BINARY=/usr/bin/oc-mirror
 
 WORKDIR /artifacts
 

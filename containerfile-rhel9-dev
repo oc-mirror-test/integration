@@ -17,8 +17,13 @@ RUN mkdir -p /root/.cache && chmod -R 777 /root/.cache
 COPY uid_entrypoint.sh /artifacts
 COPY scripts /artifacts/scripts
 COPY isc /artifacts/isc
+COPY tests/integration/testdata /artifacts/testdata
 COPY registry-config.yaml artifacts/
 COPY keys artifacts/keys
+COPY bin/integration.test /artifacts/integration.test
+
+ENV ARTIFACTS_DIR=/artifacts
+ENV OC_MIRROR_BINARY=/usr/bin/oc-mirror
 
 WORKDIR /artifacts
 
