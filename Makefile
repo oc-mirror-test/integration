@@ -13,7 +13,7 @@ ARTIFACTS_IMAGE_VERSION ?= v0.0.2
 all: clean test build
 
 clone:
-	$(shell ./scripts/clone-build.sh $(PR) $(BRANCH))
+	$(shell ./local-dev/clone-build.sh $(PR) $(BRANCH))
 
 build: 
 	mkdir -p bin
