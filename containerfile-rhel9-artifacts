@@ -1,11 +1,12 @@
+FROM docker.io/library/registry:3.0.0 as distribution
 FROM registry.redhat.io/ubi9-minimal:latest
-RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc 
+RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc
 RUN chmod -R 755 /artifacts
 COPY ./scripts /artifacts/scripts
 COPY ./isc /artifacts/isc
 COPY uid_entrypoint.sh artifacts/
 COPY registry-config.yaml artifacts/
-COPY registry /usr/bin/registry
+COPY --from=distribution /bin/registry /usr/bin/registry
 COPY ./keys artifacts/keys
 LABEL io.k8s.display-name="oc-mirror-integrations-tests-artifacts" \
       io.k8s.description="Integration tests for oc-mirror v2 plugin." \
