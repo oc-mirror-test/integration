@@ -13,7 +13,7 @@ ARTIFACTS_IMAGE_VERSION ?= v0.0.2
 all: clean test build
 
 clone:
-	$(shell ./local-dev/clone-build.sh $(PR) $(BRANCH))
+	./local-dev/clone-build.sh $(BRANCH) $(PR)
 
 build: 
 	mkdir -p bin
@@ -36,7 +36,7 @@ test:
 	go test -v -short -coverprofile=tests/results/cover.out ./...
 
 clean:
-	rm -rf build/*
+	rm -rf bin/*
 	go clean ./...
 
 container:
@@ -45,7 +45,7 @@ container:
 push:
 	podman push --authfile=${HOME}/.docker/config.json ${REGISTRY_BASE}/${IMAGE_NAME}:${IMAGE_VERSION}-dev
 
-container-artifacts:
+container-artifacts: build-test-binary-static
 	podman build -t ${REGISTRY_BASE}/${ARTIFACTS_IMAGE_NAME}:${ARTIFACTS_IMAGE_VERSION} -f containerfile-rhel9-artifacts
 
 push-artifacts:

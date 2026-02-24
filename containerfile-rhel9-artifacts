@@ -1,7 +1,6 @@
 FROM docker.io/library/registry:3.0.0 as distribution
 FROM registry.redhat.io/ubi9-minimal:latest
 RUN mkdir -p /artifacts/scripts && mkdir -p /artifacts/isc && mkdir -p /artifacts/testdata
-RUN chmod -R 755 /artifacts
 COPY ./scripts /artifacts/scripts
 COPY ./isc /artifacts/isc
 COPY ./tests/integration/testdata /artifacts/testdata
@@ -10,6 +9,7 @@ COPY registry-config.yaml artifacts/
 COPY --from=distribution /bin/registry /usr/bin/registry
 COPY ./keys artifacts/keys
 COPY bin/integration.test /artifacts/integration.test
+RUN chmod -R 755 /artifacts
 LABEL io.k8s.display-name="oc-mirror-integrations-tests-artifacts" \
       io.k8s.description="Integration tests for oc-mirror v2 plugin." \
       io.openshift.tags="cli,mirror" \

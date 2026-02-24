@@ -1,6 +1,6 @@
 FROM docker.io/library/registry:3.0.0 as distribution
 
-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-builder-multi-openshift-4.19 AS builder_rhel9
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder_rhel9
 WORKDIR oc-mirror/v2
 COPY . .
 RUN make build-static
