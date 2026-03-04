@@ -1,9 +1,9 @@
-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder_rhel9
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder_rhel9
 WORKDIR /go/src/github.com/openshift/oc-mirror
 COPY . .
 RUN DISABLE_CGO=1 CGO_ENABLED=0 make build
 
-FROM quay.io/oc-mirror/integration-tests-artifacts:v0.0.1 as embedd
+FROM quay.io/oc-mirror/integration-tests-artifacts:v0.0.2 as embedd
 
 FROM registry.redhat.io/ubi9-minimal@sha256:30bbd445046a3a63f5f5557a3c67dee74e3c8e7855eb0347630b020f3689823f
 COPY --from=builder_rhel9 /go/src/github.com/openshift/oc-mirror/bin/oc-mirror /usr/bin/oc-mirror
@@ -14,10 +14,15 @@ RUN mkdir -p /root/.cache && chmod -R 777 /root/.cache
 
 COPY --from=embedd artifacts/scripts /artifacts/scripts
 COPY --from=embedd artifacts/isc /artifacts/isc
+COPY --from=embedd artifacts/testdata /artifacts/testdata
 COPY --from=embedd artifacts/uid_entrypoint.sh /artifacts
 COPY --from=embedd artifacts/registry-config.yaml /artifacts
 COPY --from=embedd /usr/bin/registry /usr/bin/registry
 COPY --from=embedd /artifacts/keys /artifacts/keys
+COPY --from=embedd /artifacts/integration.test /artifacts/integration.test
+
+ENV ARTIFACTS_DIR=/artifacts
+ENV OC_MIRROR_BINARY=/usr/bin/oc-mirror
 
 WORKDIR /artifacts
 

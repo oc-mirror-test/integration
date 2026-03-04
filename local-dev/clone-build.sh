@@ -42,6 +42,10 @@ cp -r ../isc .
 cp ../registry-config.yaml .
 cp ../registry .
 cp -r ../keys .
+mkdir -p tests/integration
+cp -r ../tests/integration/testdata tests/integration/
+mkdir -p bin
+cp ../bin/integration.test bin/
 
 make container
 
