@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("mirrorToDisk + diskToMirror", func() {
@@ -21,30 +20,24 @@ var _ = Describe("mirrorToDisk + diskToMirror", func() {
 	Describe("mirrorToDisk + diskToMirror happy path", func() {
 		iscHappyPath := "isc-happy-path.yaml"
 
-		It("should mirror from remote registry to to disk and then from disk to local registry", func() {
+		It("should mirror from remote registry to disk and then from disk to local registry", func() {
 			By("running mirrorToDisk")
 			result, err := runner.MirrorToDisk(ctx, filepath.Join(iscDir, iscHappyPath), workDir, "--remove-signatures=true")
 			expectOcMirrorCommandSuccess(result, err)
 
-			By("verifying working-dir structure")
-			expectWorkingDirStructure(workDir, []string{
-				"hold-release", "release-images", "operator-catalogs", "helm", "cluster-resources", "signatures", "logs",
-			})
+			By("verifying images are mirrored in the local cache registry")
+			expectSuccessfulMirrorInLocalCache(filepath.Join(iscDir, iscHappyPath), defaultCacheDir())
 
-			By("verifying tar archive was created")
-			expectTarArchiveExists(workDir)
+			By("verifying tar archive contents")
+			expectCorrectTarArchiveContents(filepath.Join(iscDir, iscHappyPath), workDir)
 
 			By("running diskToMirror")
 			result, err = runner.DiskToMirror(ctx, filepath.Join(iscDir, iscHappyPath), workDir, testRegistry.Endpoint(),
 				"--remove-signatures=true", "--dest-tls-verify=false")
 			expectOcMirrorCommandSuccess(result, err)
 
-			By("verifying images are in the local registry")
-			repos, err := testRegistry.ListRepositories()
-			Expect(err).NotTo(HaveOccurred())
-			expectRepositoriesExist(repos, []string{
-				"openshifttest/hello-openshift", "openshift/release", "stefanprodan/podinfo",
-			})
+			By("verifying images are mirrored in the local registry")
+			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscHappyPath), *testRegistry)
 		})
 	})
 })

@@ -3,6 +3,7 @@ package registry
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -74,8 +75,8 @@ func Start(ctx context.Context, configPath string, port int, logWriter io.Writer
 }
 
 // WaitReady polls the registry health endpoint until it responds or timeout is reached.
-func (r *Registry) WaitReady(timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+func (r *Registry) WaitReady(ctx context.Context, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	healthURL := fmt.Sprintf("http://localhost:%d/v2/", r.port)
@@ -119,7 +120,7 @@ func (r *Registry) Stop() error {
 
 	err := os.RemoveAll(r.storagePath)
 	if err != nil {
-		return fmt.Errorf("failed to remove registry storage: %w", err)
+		return errors.Join(fmt.Errorf("failed to remove registry storage: %w", err), waitErr)
 	}
 
 	return waitErr

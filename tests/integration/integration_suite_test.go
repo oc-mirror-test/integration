@@ -30,7 +30,7 @@ func TestIntegration(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Minute)
+	ctx, cancel = context.WithTimeout(context.Background(), suiteTimeout())
 
 	// Determine paths - when running in container, use ARTIFACTS_DIR
 	// When running locally, use relative path to project root
@@ -58,7 +58,7 @@ var _ = BeforeEach(func() {
 	testRegistry, err = registry.Start(ctx, registryConfig, 5000, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred(), "Failed to start registry")
 
-	err = testRegistry.WaitReady(30 * time.Second)
+	err = testRegistry.WaitReady(ctx, 30*time.Second)
 	Expect(err).NotTo(HaveOccurred(), "Registry not ready")
 })
 
@@ -76,3 +76,12 @@ var _ = AfterSuite(func() {
 		cancel()
 	}
 })
+
+func suiteTimeout() time.Duration {
+	if v := os.Getenv("TEST_TIMEOUT"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+	return 30 * time.Minute
+}
