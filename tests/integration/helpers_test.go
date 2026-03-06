@@ -184,7 +184,7 @@ func expectSuccessfulMirrorInRegistry(isc string, registry registry.Registry) {
 
 // expectRepositoriesExist verifies that each expected repository substring is found in the registry.
 func expectRepositoriesExist(registry registry.Registry, expected []string) {
-	repos, err := registry.ListRepositories()
+	repos, err := registry.ListRepositories(ctx)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(repos).NotTo(BeEmpty(), "registry has no repositories")
 
@@ -200,7 +200,24 @@ func expectRepositoriesExist(registry registry.Registry, expected []string) {
 	}
 }
 
-// parseImageSetConfig gets the path of an ImageSetConfig yaml and returns a parsed ImageSetConfig
+// expectEmptyRegistry verifies that no non-catalog repos have tags remaining after a delete operation.
+func expectEmptyRegistry(reg registry.Registry) {
+	repos, err := reg.ListRepositories(ctx)
+	Expect(err).NotTo(HaveOccurred())
+
+	for _, repo := range repos {
+		tags, err := reg.ListTags(ctx, repo)
+		Expect(err).NotTo(HaveOccurred())
+		if len(tags) == 0 {
+			continue
+		}
+		isCatalog, err := reg.IsCatalog(ctx, repo, tags[0])
+		Expect(err).NotTo(HaveOccurred())
+		Expect(isCatalog).To(BeTrue(), "non-catalog repo %q still has tags after delete", repo)
+	}
+}
+
+// parseImageSetConfig gets the path of an ImageSetConfig YAML and returns a parsed ImageSetConfig
 func parseImageSetConfig(isc string) ImageSetConfiguration {
 	data, err := os.ReadFile(isc)
 	Expect(err).NotTo(HaveOccurred())
@@ -355,6 +372,12 @@ func setupWorkDir() string {
 	}
 
 	return workDir
+}
+
+// expectDeleteImagesYamlExists verifies that the delete images yaml file was created after delete phase 1.
+func expectDeleteImagesYamlExists(path string) {
+	_, err := os.Stat(path)
+	Expect(err).NotTo(HaveOccurred(), "delete images yaml not found at: %s", path)
 }
 
 // cleanupWorkDir removes the working directory.

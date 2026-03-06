@@ -2,16 +2,17 @@ package registry
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
 
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,7 +22,7 @@ type Registry struct {
 	configPath  string
 	storagePath string
 	port        int
-	client      *http.Client
+	client      name.Registry
 	cancel      context.CancelFunc
 }
 
@@ -64,13 +65,19 @@ func Start(ctx context.Context, configPath string, port int, logWriter io.Writer
 		return nil, fmt.Errorf("failed to start registry: %w", err)
 	}
 
+	reg, err := name.NewRegistry(fmt.Sprintf("localhost:%d", port), name.Insecure)
+	if err != nil {
+		cancel()
+		return nil, fmt.Errorf("failed to set up registry: %w", err)
+	}
+
 	return &Registry{
 		cmd:         cmd,
 		configPath:  configPath,
 		storagePath: storagePath,
 		port:        port,
 		cancel:      cancel,
-		client:      &http.Client{Timeout: time.Second},
+		client:      reg,
 	}, nil
 }
 
@@ -79,23 +86,13 @@ func (r *Registry) WaitReady(ctx context.Context, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	healthURL := fmt.Sprintf("http://localhost:%d/v2/", r.port)
-
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	for {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
-		if err != nil {
-			return fmt.Errorf("failed to create request: %w", err)
-		}
-
-		resp, err := r.client.Do(req)
+		_, err := remote.Catalog(ctx, r.client, remote.WithAuth(authn.Anonymous))
 		if err == nil {
-			_ = resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				return nil
-			}
+			return nil
 		}
 
 		select {
@@ -132,25 +129,37 @@ func (r *Registry) Endpoint() string {
 }
 
 // ListRepositories returns all repositories in the registry.
-func (r *Registry) ListRepositories() ([]string, error) {
-	catalogURL := fmt.Sprintf("http://localhost:%d/v2/_catalog", r.port)
+func (r *Registry) ListRepositories(ctx context.Context) ([]string, error) {
+	return remote.Catalog(ctx, r.client, remote.WithAuth(authn.Anonymous))
+}
 
-	resp, err := r.client.Get(catalogURL)
+// ListTags returns all the tags for a given repository in the registry
+func (r *Registry) ListTags(ctx context.Context, repo string) ([]string, error) {
+	ref, err := name.NewRepository(fmt.Sprintf("%s/%s", r.Endpoint(), repo), name.Insecure)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query catalog: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("catalog returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("couldn't list tags for repo %s: %w", repo, err)
 	}
 
-	var catalog struct {
-		Repositories []string `json:"repositories"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&catalog); err != nil {
-		return nil, fmt.Errorf("failed to decode catalog: %w", err)
+	return remote.List(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(ctx))
+}
+
+// IsCatalog returns true if the given repository and tag is an OLM operator catalog image.
+func (r *Registry) IsCatalog(ctx context.Context, repo, tag string) (bool, error) {
+	ref, err := name.NewTag(fmt.Sprintf("%s/%s:%s", r.Endpoint(), repo, tag), name.Insecure)
+	if err != nil {
+		return false, fmt.Errorf("couldn't create tag reference for %s:%s: %w", repo, tag, err)
 	}
 
-	return catalog.Repositories, nil
+	img, err := remote.Image(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(ctx))
+	if err != nil {
+		return false, fmt.Errorf("couldn't fetch image %s:%s: %w", repo, tag, err)
+	}
+
+	cf, err := img.ConfigFile()
+	if err != nil {
+		return false, fmt.Errorf("couldn't get config file for %s:%s: %w", repo, tag, err)
+	}
+
+	_, ok := cf.Config.Labels["operators.operatorframework.io.index.configs.v1"]
+	return ok, nil
 }
