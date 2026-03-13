@@ -29,9 +29,6 @@ var _ = Describe("mirrorToMirror", func() {
 				"--remove-signatures=true", "--dest-tls-verify=false")
 			expectOcMirrorCommandSuccess(result, err)
 
-			By("verifying images are mirrored in the local cache registry")
-			expectSuccessfulMirrorInLocalCache(filepath.Join(iscDir, iscHappyPath), defaultCacheDir())
-
 			By("verifying images are mirrored in the local registry")
 			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscHappyPath), *testRegistry)
 

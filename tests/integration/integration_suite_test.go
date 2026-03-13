@@ -20,6 +20,7 @@ var (
 	registryConfig string
 	iscDir         string
 	keysDir        string
+	cacheDir       string
 	ctx            context.Context
 	cancel         context.CancelFunc
 )
@@ -53,6 +54,10 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = BeforeEach(func() {
+	// Reset cache dir to default before each test.
+	// Individual tests can override this and pass --cache-dir to the runner commands
+	cacheDir = defaultCacheDir()
+
 	// Start a fresh registry for each test
 	var err error
 	testRegistry, err = registry.Start(ctx, registryConfig, 5000, GinkgoWriter)
@@ -68,6 +73,11 @@ var _ = AfterEach(func() {
 		if err := testRegistry.Stop(); err != nil {
 			GinkgoWriter.Printf("Failed to stop registry: %v\n", err)
 		}
+	}
+
+	// Clean up the oc-mirror cache
+	if err := os.RemoveAll(cacheDir); err != nil {
+		GinkgoWriter.Printf("Failed to clean cache dir %s: %v\n", cacheDir, err)
 	}
 })
 

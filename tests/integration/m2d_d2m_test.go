@@ -30,7 +30,7 @@ var _ = Describe("mirrorToDisk + diskToMirror", func() {
 			expectOcMirrorCommandSuccess(result, err)
 
 			By("verifying images are mirrored in the local cache registry")
-			expectSuccessfulMirrorInLocalCache(filepath.Join(iscDir, iscHappyPath), defaultCacheDir())
+			expectSuccessfulMirrorInLocalCache(filepath.Join(iscDir, iscHappyPath), cacheDir)
 
 			By("verifying tar archive contents")
 			expectCorrectTarArchiveContents(filepath.Join(iscDir, iscHappyPath), workDir)
