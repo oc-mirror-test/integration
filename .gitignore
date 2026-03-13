@@ -7,3 +7,4 @@ release-payload/
 images/
 .idea/
 bin/
+logs/

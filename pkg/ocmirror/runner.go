@@ -98,10 +98,35 @@ func (r *Runner) DiskToMirror(ctx context.Context, configPath, sourceDir, destRe
 }
 
 // MirrorToMirror runs oc-mirror to mirror images from one registry to another different registry.
-func (r *Runner) MirrorToMirror(ctx context.Context, confPath, workspace, destRegistry string, extraArgs ...string) (*Result, error) {
+func (r *Runner) MirrorToMirror(ctx context.Context, configPath, workspace, destRegistry string, extraArgs ...string) (*Result, error) {
 	args := []string{
-		"--config", confPath,
+		"--config", configPath,
 		"--workspace", fmt.Sprintf("file://%s", workspace),
+		fmt.Sprintf("docker://%s", destRegistry),
+		"--v2",
+	}
+	args = append(args, extraArgs...)
+	return r.Run(ctx, args...)
+}
+
+func (r *Runner) DeletePhaseOne(ctx context.Context, configPath, workspace, deleteId, destRegistry string, extraArgs ...string) (*Result, error) {
+	args := []string{
+		"delete",
+		"--config", configPath,
+		"--generate",
+		"--workspace", fmt.Sprintf("file://%s", workspace),
+		"--delete-id", deleteId,
+		fmt.Sprintf("docker://%s", destRegistry),
+		"--v2",
+	}
+	args = append(args, extraArgs...)
+	return r.Run(ctx, args...)
+}
+
+func (r *Runner) DeletePhaseTwo(ctx context.Context, deleteYaml, destRegistry string, extraArgs ...string) (*Result, error) {
+	args := []string{
+		"delete",
+		"--delete-yaml-file", deleteYaml,
 		fmt.Sprintf("docker://%s", destRegistry),
 		"--v2",
 	}
