@@ -380,6 +380,50 @@ func expectDeleteImagesYamlExists(path string) {
 	Expect(err).NotTo(HaveOccurred(), "delete images yaml not found at: %s", path)
 }
 
+// expectValidMappingFile verifies that the dry-run mapping.txt file was created, that every line
+// follows the source=destination format, and that all expected repositories from the ISC are represented.
+func expectValidMappingFile(workDir, iscPath string) {
+	mappingPath := filepath.Join(workDir, dirWorkingDir, "dry-run", "mapping.txt")
+	data, err := os.ReadFile(mappingPath)
+	Expect(err).NotTo(HaveOccurred(), "mapping.txt not found at: %s", mappingPath)
+
+	content := strings.TrimSpace(string(data))
+	Expect(content).NotTo(BeEmpty(), "mapping.txt is empty")
+
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		Expect(parts).To(HaveLen(2), "mapping line does not follow source=destination format: %s", line)
+		Expect(parts[0]).NotTo(BeEmpty(), "source is empty in mapping line: %s", line)
+		Expect(parts[1]).NotTo(BeEmpty(), "destination is empty in mapping line: %s", line)
+	}
+
+	cfg := parseImageSetConfig(iscPath)
+	expectedRepos := collectExpectedRepos(cfg)
+	for _, repo := range expectedRepos {
+		Expect(content).To(ContainSubstring(repo),
+			"mapping.txt does not contain expected repository %q", repo)
+	}
+}
+
+// expectNoTarArchive verifies that no tar archive was created in the working directory.
+func expectNoTarArchive(workDir string) {
+	matches, err := filepath.Glob(filepath.Join(workDir, "mirror_*.tar"))
+	Expect(err).NotTo(HaveOccurred())
+	Expect(matches).To(BeEmpty(), "expected no tar archive but found: %v", matches)
+}
+
+// expectNoRepositoriesInRegistry verifies that the registry contains no repositories at all.
+func expectNoRepositoriesInRegistry(reg registry.Registry) {
+	repos, err := reg.ListRepositories(ctx)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(repos).To(BeEmpty(), "expected registry to have no repositories, but found: %v", repos)
+}
+
 // cleanupWorkDir removes the working directory.
 func cleanupWorkDir(workDir string) {
 	if workDir != "" {
