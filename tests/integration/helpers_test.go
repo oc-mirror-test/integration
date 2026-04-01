@@ -2,13 +2,21 @@ package integration_test
 
 import (
 	"archive/tar"
+	"bytes"
+	"context"
+	"encoding/json"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/distribution/reference"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/gomega"
 	"gopkg.in/yaml.v3"
 
@@ -79,13 +87,33 @@ type OperatorConfig struct {
 }
 
 type OperatorPackage struct {
-	Name string `yaml:"name"`
+	Name     string            `yaml:"name"`
+	Channels []OperatorChannel `yaml:"channels"`
+}
+
+type OperatorChannel struct {
+	Name       string `yaml:"name"`
+	MinVersion string `yaml:"minVersion"`
+	MaxVersion string `yaml:"maxVersion"`
+}
+
+// fbcEntry represents a single entry in a File-Based Catalog (FBC).
+type fbcEntry struct {
+	Schema  string `json:"schema" yaml:"schema"`
+	Name    string `json:"name" yaml:"name"`
+	Package string `json:"package" yaml:"package"`
 }
 
 // expectOcMirrorCommandSuccess asserts that the oc-mirror command completed successfully.
 func expectOcMirrorCommandSuccess(result *ocmirror.Result, err error) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(result.ExitCode).To(Equal(0), "oc-mirror failed:\nstdout: %s\nstderr: %s", result.Stdout, result.Stderr)
+}
+
+// expectOcMirrorCommandFailure asserts that the oc-mirror command failed with a non-zero exit code.
+func expectOcMirrorCommandFailure(result *ocmirror.Result, err error) {
+	Expect(err).NotTo(HaveOccurred())
+	Expect(result.ExitCode).NotTo(Equal(0), "expected oc-mirror to fail but it succeeded:\nstdout: %s\nstderr: %s", result.Stdout, result.Stderr)
 }
 
 // expectCorrectTarArchiveContents verifies that the tar archive contains the expected
@@ -422,6 +450,105 @@ func expectNoRepositoriesInRegistry(reg registry.Registry) {
 	repos, err := reg.ListRepositories(ctx)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(repos).To(BeEmpty(), "expected registry to have no repositories, but found: %v", repos)
+}
+
+// expectCatalogBundlesMatchISC verifies that the mirrored catalog contains only the bundles
+// that match the version constraints defined in the ISC for each operator package.
+func expectCatalogBundlesMatchISC(ctx context.Context, reg registry.Registry, iscPath string) {
+	cfg := parseImageSetConfig(iscPath)
+
+	for _, op := range cfg.Mirror.Operators {
+		for _, pkg := range op.Packages {
+			bundles := extractCatalogBundles(ctx, reg, op.Catalog, pkg.Name)
+			Expect(bundles).NotTo(BeEmpty(),
+				"no bundles found for package %q in catalog %s", pkg.Name, op.Catalog)
+
+			for _, ch := range pkg.Channels {
+				if ch.MinVersion == "" && ch.MaxVersion == "" {
+					continue
+				}
+
+				minV, err := semver.NewVersion(ch.MinVersion)
+				Expect(err).NotTo(HaveOccurred(), "invalid minVersion %q", ch.MinVersion)
+				maxV, err := semver.NewVersion(ch.MaxVersion)
+				Expect(err).NotTo(HaveOccurred(), "invalid maxVersion %q", ch.MaxVersion)
+
+				for _, b := range bundles {
+					vStr := strings.TrimPrefix(b, pkg.Name+".v")
+					v, err := semver.NewVersion(vStr)
+					Expect(err).NotTo(HaveOccurred(), "failed to parse version from bundle %q", b)
+					Expect(v.LessThan(minV)).To(BeFalse(),
+						"bundle %q version %s is below minVersion %s", b, vStr, ch.MinVersion)
+					Expect(v.GreaterThan(maxV)).To(BeFalse(),
+						"bundle %q version %s is above maxVersion %s", b, vStr, ch.MaxVersion)
+				}
+			}
+		}
+	}
+}
+
+// extractCatalogBundles pulls a catalog image from the registry and returns
+// all FBC bundle names for the given operator package.
+func extractCatalogBundles(ctx context.Context, reg registry.Registry, catalogRef, packageName string) []string {
+	repo := extractRepositoryName(catalogRef)
+	tag := extractTag(catalogRef)
+	ref, err := name.NewTag(reg.Endpoint()+"/"+repo+":"+tag, name.Insecure)
+	Expect(err).NotTo(HaveOccurred())
+
+	img, err := remote.Image(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(ctx))
+	Expect(err).NotTo(HaveOccurred())
+
+	// Get the FBC configs path from the standard OLM label
+	cf, err := img.ConfigFile()
+	Expect(err).NotTo(HaveOccurred())
+	configsPath, ok := cf.Config.Labels["operators.operatorframework.io.index.configs.v1"]
+	Expect(ok).To(BeTrue(), "catalog image missing FBC configs label")
+
+	// Flatten the image into a single tar stream
+	rc := mutate.Extract(img)
+	defer rc.Close()
+
+	var bundles []string
+	tr := tar.NewReader(rc)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		Expect(err).NotTo(HaveOccurred())
+
+		if hdr.Typeflag != tar.TypeReg {
+			continue
+		}
+		if !strings.HasPrefix(filepath.Clean("/"+hdr.Name), configsPath) {
+			continue
+		}
+
+		data, err := io.ReadAll(tr)
+		Expect(err).NotTo(HaveOccurred())
+
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		for decoder.More() {
+			var entry fbcEntry
+			if err := decoder.Decode(&entry); err != nil {
+				break
+			}
+			if entry.Schema == "olm.bundle" && entry.Package == packageName {
+				bundles = append(bundles, entry.Name)
+			}
+		}
+	}
+
+	return bundles
+}
+
+// extractTag extracts the tag from an image reference (e.g., "quay.io/foo/bar:v4.19" -> "v4.19").
+func extractTag(imageRef string) string {
+	ref, err := reference.ParseNormalizedNamed(imageRef)
+	Expect(err).NotTo(HaveOccurred(), "failed to parse image ref: %s", imageRef)
+	tagged, ok := ref.(reference.Tagged)
+	Expect(ok).To(BeTrue(), "image ref %s has no tag", imageRef)
+	return tagged.Tag()
 }
 
 // cleanupWorkDir removes the working directory.

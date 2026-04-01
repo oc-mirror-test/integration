@@ -17,7 +17,7 @@ var _ = Describe("dry-run", func() {
 	})
 
 	Describe("mirrorToMirror dry-run", func() {
-		iscHappyPath := "isc-happy-path.yaml"
+		iscHappyPath := filepath.Join("happy_path", "isc-happy-path.yaml")
 
 		It("should generate mapping file without mirroring images to the registry", func() {
 			By("running mirrorToMirror with --dry-run")
@@ -34,7 +34,7 @@ var _ = Describe("dry-run", func() {
 	})
 
 	Describe("mirrorToDisk + diskToMirror dry-run", func() {
-		iscHappyPath := "isc-happy-path.yaml"
+		iscHappyPath := filepath.Join("happy_path", "isc-happy-path.yaml")
 
 		It("should generate mapping files without creating a tar archive or mirroring images to the registry", func() {
 			By("running mirrorToDisk with --dry-run")

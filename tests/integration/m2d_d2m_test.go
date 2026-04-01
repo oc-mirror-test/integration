@@ -19,8 +19,8 @@ var _ = Describe("mirrorToDisk + diskToMirror", func() {
 	})
 
 	Describe("mirrorToDisk + diskToMirror happy path", func() {
-		iscHappyPath := "isc-happy-path.yaml"
-		discHappyPath := "disc-happy-path.yaml"
+		iscHappyPath := filepath.Join("happy_path", "isc-happy-path.yaml")
+		discHappyPath := filepath.Join("happy_path", "disc-happy-path.yaml")
 
 		It("should mirror from remote registry to disk and then from disk to local registry", func() {
 			deleteYaml := filepath.Join(workDir, "working-dir", "delete", "delete-images-"+deleteId+".yaml")
