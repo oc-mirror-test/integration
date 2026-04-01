@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-set -exv 
+set -exv
 
 BRANCH=${1:-main}
 PR=$3
@@ -9,22 +9,21 @@ REPO=https://github.com/openshift/oc-mirror.git
 
 echo -e "Branch: ${BRANCH} PR: ${PR}"
 
-if [ "${CLEAN}" == "true" ];
-then
-  rm -rf oc-mirror
+make build-test-binary-static
+
+if [ "${CLEAN}" == "true" ]; then
+    rm -rf oc-mirror
 fi
 
-if [ ! -d "oc-mirror" ];
-then
-  git clone -b ${BRANCH} ${REPO}
+if [ ! -d "oc-mirror" ]; then
+    git clone -b ${BRANCH} ${REPO}
 fi
 
 cd oc-mirror
 
-if [ "${PR}" == "true" ];
-then
-  git fetch upstream pull/${PR}/head:${BRANCH} 
-  git checkout ${BRANCH}
+if [ "${PR}" == "true" ]; then
+    git fetch upstream pull/${PR}/head:${BRANCH}
+    git checkout ${BRANCH}
 fi
 
 pushd v2 || true
@@ -40,7 +39,6 @@ cp ../uid_entrypoint.sh .
 cp -r ../scripts .
 cp -r ../isc .
 cp ../registry-config.yaml .
-cp ../registry .
 cp -r ../keys .
 mkdir -p tests/integration
 cp -r ../tests/integration/testdata tests/integration/
