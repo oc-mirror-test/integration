@@ -109,6 +109,26 @@ func (r *Runner) MirrorToMirror(ctx context.Context, configPath, workspace, dest
 	return r.Run(ctx, args...)
 }
 
+func (r *Runner) ListOperators(ctx context.Context, extraArgs ...string) (*Result, error) {
+	args := []string{
+		"--v2",
+		"list",
+		"operators",
+	}
+	args = append(args, extraArgs...)
+	return r.Run(ctx, args...)
+}
+
+func (r *Runner) ListReleases(ctx context.Context, extraArgs ...string) (*Result, error) {
+	args := []string{
+		"--v2",
+		"list",
+		"releases",
+	}
+	args = append(args, extraArgs...)
+	return r.Run(ctx, args...)
+}
+
 func (r *Runner) DeletePhaseOne(ctx context.Context, configPath, workspace, deleteId, destRegistry string, extraArgs ...string) (*Result, error) {
 	args := []string{
 		"delete",
