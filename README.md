@@ -78,40 +78,19 @@ podman run -it --net=host -v /home/${USER}/.docker/:/root/.docker -v ./images/:/
 
 ### Release signature signing and verification
 
-This step has been included and updated in the current artifacts image.
+The integration tests require GPG signature verification for the pinned test release image (`quay.io/oc-mirror/release/test-release-index:v0.0.1`). The `keys/` directory is committed to the repo with:
 
-This is just for information sake in case there are changes needed to the test-release-index or test-image on quay.io.
+- `release-pk.asc` - GPG public key used by oc-mirror for verification
+- A signature file (e.g. `v0.0.1-sha256-<digest>`) - the signed payload for the release image
 
-You will also need to follow the next steps if you want to run these tests locally, as oc-mirror verifies the GPG signature on OpenShift releases.
+For running tests locally, no additional setup is needed - the keys in `keys/` should work out of the box.
 
-First, execute the following command to create a "fake" GPG robot account. Use default settings and when prompted use an email like `robot@test.com`:
+#### Regenerating keys (only needed when the release image is rebuilt)
 
-```
-# use something like robot@test.com for an email address
-gpg2 -a --full-generate-key 
-```
+If you rebuild the release image (changing its digest), run the following from the repo root:
 
-As we have a fixed naming convention for our release image we can now sign it.
-
-To do so, you can navigate to [quay.io](quay.io) and create a robot account (Account Settings > Robot Accounts). 
-Once created, click on it and copy and execute the `Podman Login` command, appending `--authfile ~/.docker/robot-quay.json`.
-
-Once the authfile is created, proceed to create the sigstore and keys directories and sign the image:
-```
-mkdir ./sigstore
-mkdir ./keys
-
-podman image sign  docker://quay.io/oc-mirror/release/test-release-index:v0.0.1 --sign-by robot@test.com --directory ./sigstore --authfile /home/${USER}/.docker/robot-quay.json --log-level=trace
+```bash
+./images/release/generate-release-signature.sh
 ```
 
-
-Generate the ascii output so that oc-mirror can read in the pk key
-
-```
-gpg -a --output ./keys/release-pk.asc --export-secret-key robot@test.com
-```
-
-Finally copy the sigstore public key to keys
-```
-cp sigstore/oc-mirror/release/test-release-index\@sha256\=f81792339c8b5934191d18a53b18bc1d584e01a9f37d59c0aa6905b00200aa1b/signature-1 keys/v0.0.1-f81792339c8b5934191d18a53b18bc1d584e01a9f37d59c0aa6905b00200aa1b
-```
+This generates a throwaway GPG keypair, signs the release image digest from `images/release/release-payload/index.json`, and writes the public key and signature file to `keys/`. If you update the release image, commit the updated `keys/` directory after running the script.
