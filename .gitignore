@@ -3,7 +3,6 @@ workingdir/
 distribution/
 /registry
 release-payload/
-images/
 .idea/
 bin/
 logs/
