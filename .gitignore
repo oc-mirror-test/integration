@@ -2,7 +2,6 @@ oc-mirror/
 workingdir/
 distribution/
 /registry
-keys/
 release-payload/
 images/
 .idea/
