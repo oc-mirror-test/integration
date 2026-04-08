@@ -28,8 +28,11 @@ var _ = Describe("operators", func() {
 			By("verifying the operator catalog is mirrored in the registry")
 			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscFile), *testRegistry)
 
-			By("verifying the catalog contains only bundles within the version range")
-			expectCatalogBundlesMatchISC(ctx, *testRegistry, filepath.Join(iscDir, iscFile))
+			By("verifying the catalog contains exactly the bundles within the version range")
+			expectCatalogBundlesMatchISC(ctx, *testRegistry, filepath.Join(iscDir, iscFile),
+				map[string][]string{
+					"foo": {"foo.v0.2.0", "foo.v0.3.0", "foo.v0.3.1"},
+				})
 		})
 	})
 
@@ -46,7 +49,10 @@ var _ = Describe("operators", func() {
 			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscFile), *testRegistry)
 
 			By("verifying the catalog contains only the pinned bundle version")
-			expectCatalogBundlesMatchISC(ctx, *testRegistry, filepath.Join(iscDir, iscFile))
+			expectCatalogBundlesMatchISC(ctx, *testRegistry, filepath.Join(iscDir, iscFile),
+				map[string][]string{
+					"foo": {"foo.v0.3.1"},
+				})
 		})
 	})
 
