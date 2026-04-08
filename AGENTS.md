@@ -2,7 +2,7 @@
 
 ## What this project is
 
-Integration test suite for [oc-mirror v2](https://github.com/openshift/oc-mirror), an OpenShift tool that mirrors container images and operators between registries. Tests run real mirror operations using the oc-mirror CLI against a local distribution/distribution registry.
+Integration test suite for [oc-mirror v2](https://github.com/openshift/oc-mirror), an OpenShift tool that mirrors OpenShift Container Platform releases, Operators, helm charts, and other images between registries. Tests run real mirror operations using the oc-mirror CLI against a local distribution/distribution registry.
 
 ## Structure
 

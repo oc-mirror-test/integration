@@ -7,6 +7,14 @@ user-invocable: true
 
 Convert a manual test case description into a Ginkgo v2 integration test for the oc-mirror integration test suite.
 
+## Test Images
+
+These are minimal images we generated and host ourselves to keep tests fast and self-contained, avoiding dependencies on external images that might change frequently.
+
+- Catalog: `quay.io/oc-mirror/oc-mirror-dev:test-catalog-latest`
+- Release: `quay.io/oc-mirror/release/test-release-index:v0.0.1`
+- Additional: `quay.io/openshifttest/hello-openshift@sha256:61b8f5...`
+
 ## Step-by-step process
 
 ### 1. Read project conventions
@@ -24,7 +32,7 @@ If the test case is ambiguous, ask before writing code:
 ### 3. Check for duplicate or superfluous coverage
 
 Read existing test files to ensure the scenario isn't already covered. If it is, tell the user and suggest what would add value instead.
-Also considered if one of the existing tests could be extended to cover the scenario, without blurrying the testing boundaries.
+Also consider if one of the existing tests could be extended to cover the scenario, without blurrying the testing boundaries.
 
 ### 4. Discover available APIs
 
