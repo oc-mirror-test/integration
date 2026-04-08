@@ -4,7 +4,7 @@
 # and write only the public key plus signature under keys/. No registry or credentials.
 # Requires: gpg, jq. Paths are relative to the integration repo root.
 #
-#   ./scripts/generate-release-signature.sh
+#      ./images/release/generate-release-signature.sh
 
 set -euo pipefail
 
@@ -23,7 +23,7 @@ command -v jq >/dev/null || {
 	exit 1
 }
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 INDEX_JSON="${REPO_ROOT}/images/release/release-payload/index.json"
 KEYS_DIR="${REPO_ROOT}/keys"
 IMAGE_REF="quay.io/oc-mirror/release/test-release-index:v0.0.1"
@@ -74,6 +74,11 @@ printf '%s' "${SIG_PAYLOAD}" | gpg --batch \
 	--local-user "${GPG_IDENTITY}" \
 	--digest-algo SHA512 \
 	--sign
+
+if [[ ! -f "${SIG_FILE}" ]]; then
+	echo "Signing failed — ${SIG_FILE} was not created" >&2
+	exit 1
+fi
 
 gpg -a --export --output "${PK_OUT}" "${GPG_IDENTITY}"
 
