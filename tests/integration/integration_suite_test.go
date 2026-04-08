@@ -21,6 +21,7 @@ var (
 	iscDir         string
 	keysDir        string
 	cacheDir       string
+	graphDataDir   string
 	ctx            context.Context
 	cancel         context.CancelFunc
 )
@@ -43,6 +44,7 @@ var _ = BeforeSuite(func() {
 
 	registryConfig = filepath.Join(artifactsDir, "registry-config.yaml")
 	iscDir = filepath.Join("testdata", "imagesetconfigs")
+	graphDataDir = filepath.Join("testdata", "graphdatas")
 	keysDir = filepath.Join(artifactsDir, "keys")
 
 	// Setup GPG keys for release signature verification
