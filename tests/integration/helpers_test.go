@@ -23,9 +23,8 @@ import (
 )
 
 const (
-	// releaseSignaturePattern matches signature files for the test release.
-	// The pattern matches files with SHA256 hash prefix f817.
-	releaseSignaturePattern = "*f817*"
+	// releasePublicKeyFile is the GPG public key filename in the keys directory.
+	releasePublicKeyFile = "release-pk.asc"
 	platformReleaseRepo     = "openshift/release"
 
 	dirWorkingDir = "working-dir"
@@ -379,16 +378,20 @@ func setupWorkDir() string {
 	err = os.MkdirAll(sigDir, 0755)
 	Expect(err).NotTo(HaveOccurred())
 
-	// Copy signature files into working dir
+	// Find the single signature file in keys/ (any file that isn't the public key)
 	entries, err := os.ReadDir(keysDir)
 	Expect(err).NotTo(HaveOccurred())
 
+	var sigFiles []string
 	for _, entry := range entries {
-		if matched, _ := filepath.Match(releaseSignaturePattern, entry.Name()); matched {
-			err = copyFile(filepath.Join(keysDir, entry.Name()), filepath.Join(sigDir, entry.Name()))
-			Expect(err).NotTo(HaveOccurred())
+		if !entry.IsDir() && entry.Name() != releasePublicKeyFile {
+			sigFiles = append(sigFiles, entry.Name())
 		}
 	}
+	Expect(sigFiles).To(HaveLen(1), "expected exactly one signature file in keys/, found: %v", sigFiles)
+
+	err = copyFile(filepath.Join(keysDir, sigFiles[0]), filepath.Join(sigDir, sigFiles[0]))
+	Expect(err).NotTo(HaveOccurred())
 
 	return workDir
 }
