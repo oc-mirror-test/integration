@@ -25,11 +25,11 @@ build-static:
 
 build-test-binary:
 	mkdir -p bin
-	go test -c -mod=readonly $(GO_BUILD_FLAGS) -o bin/integration.test ./tests/integration/
+	go test -c -mod=readonly -trimpath $(GO_BUILD_FLAGS) -o bin/integration.test ./tests/integration/
 
 build-test-binary-static:
 	mkdir -p bin
-	CGO_ENABLED=0 go test -c -mod=readonly -ldflags="-extldflags=-static" $(GO_BUILD_FLAGS) -o bin/integration.test ./tests/integration/
+	CGO_ENABLED=0 go test -c -mod=readonly -trimpath -ldflags="-extldflags=-static" $(GO_BUILD_FLAGS) -o bin/integration.test ./tests/integration/
 
 test:
 	mkdir -p tests/results
