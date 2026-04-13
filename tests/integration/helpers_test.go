@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/distribution/reference"
@@ -276,7 +278,6 @@ func collectExpectedRepos(cfg ImageSetConfiguration) []string {
 	}
 
 	return expected
-
 }
 
 // extractRepositoryName parses an image reference and extracts the repository part.
@@ -376,7 +377,7 @@ func setupWorkDir() string {
 
 	// Copy release signature files to working directory
 	sigDir := filepath.Join(workDir, dirWorkingDir, "signatures")
-	err = os.MkdirAll(sigDir, 0755)
+	err = os.MkdirAll(sigDir, 0o755)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Copy signature files into working dir
@@ -557,4 +558,22 @@ func cleanupWorkDir(workDir string) {
 	if workDir != "" {
 		os.RemoveAll(workDir)
 	}
+}
+
+func isOCMirrorVersionBefore(major int, minor int) bool {
+	ver := os.Getenv("OC_MIRROR_VERSION")
+	if ver == "" || ver == "main" {
+		return false
+	}
+	versionMatcher := regexp.MustCompile(`(\d)\.(\d+)`)
+	parts := versionMatcher.FindStringSubmatch(ver)
+	Expect(parts).ToNot(BeNil(), "invalid version format %q", ver)
+	verMajor, err := strconv.Atoi(parts[1])
+	Expect(err).ToNot(HaveOccurred(), "failed to parse oc mirror major version %q", ver)
+	if verMajor == major {
+		verMinor, err := strconv.Atoi(parts[2])
+		Expect(err).ToNot(HaveOccurred(), "failed to parse oc mirror minor version %q", ver)
+		return verMinor < minor
+	}
+	return verMajor < major
 }
