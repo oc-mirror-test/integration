@@ -17,7 +17,12 @@ import (
 
 const testCatalog string = "quay.io/oc-mirror/oc-mirror-dev:test-catalog-latest"
 
-var _ = Describe("oc-mirror list operators", func() {
+var _ = Describe("oc-mirror list operators", Ordered, func() {
+	BeforeAll(func() {
+		if skipListTest() {
+			Skip("oc-mirror list operators not available in < 4.22")
+		}
+	})
 	It("should list operators of a specific catalog", func() {
 		result, err := runner.ListOperators(ctx, "--catalog", testCatalog)
 		expectOcMirrorCommandSuccess(result, err)
@@ -60,6 +65,9 @@ var _ = Describe("oc-mirror list releases", Ordered, func() {
 	// Custom runner so we can override envs without affecting other tests
 	releaseRunner := ocmirror.NewRunner(binaryPath)
 	BeforeAll(func() {
+		if skipListTest() {
+			Skip("oc-mirror list operators not available in < 4.22")
+		}
 		graphData, err := os.ReadFile(filepath.Join(graphDataDir, "graph_data.json"))
 		Expect(err).NotTo(HaveOccurred(), "should read test graph data")
 		// Mock Cincinnati endpoint.
@@ -140,4 +148,8 @@ func compareLineOutput(result string, skipHeadersCount int, expected []string) {
 		lines = append(lines, strings.TrimSpace(line))
 	}
 	Expect(lines).To(ContainElements(expected), "mismatched elements")
+}
+
+func skipListTest() bool {
+	return isOCMirrorVersionBefore(4, 22)
 }
