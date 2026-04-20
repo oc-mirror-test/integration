@@ -5,7 +5,7 @@ metadata:
   annotations:
     capabilities: BasicInstall
     certified: 'false'
-    containerImage: REGISTRY_CATALOGNAMESPACE:baz-v1.1.0
+    containerImage: quay.io/oc-mirror/oc-mirror-dev:baz-v1.1.0
     description: The Baz Operator does Baz things.
     olm.skipRange: <1.1.0
     repository: https://github.com/openshift/oc-mirror
@@ -41,7 +41,7 @@ spec:
               containers:
               - command:
                 - /run.sh
-                image: REGISTRY_CATALOGNAMESPACE:baz-v1.1.0
+                image: quay.io/oc-mirror/oc-mirror-dev:baz-v1.1.0
                 imagePullPolicy: Always
                 name: baz
     strategy: deployment
@@ -65,7 +65,7 @@ spec:
   provider:
     name: Baz
   relatedImages:
-  - image: REGISTRY_CATALOGNAMESPACE:baz-v1.1.0
+  - image: quay.io/oc-mirror/oc-mirror-dev:baz-v1.1.0
     name: operator
   replaces: baz.v1.0.1
   version: 1.1.0

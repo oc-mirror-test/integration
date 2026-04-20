@@ -5,7 +5,7 @@ metadata:
   annotations:
     capabilities: BasicInstall
     certified: 'false'
-    containerImage: REGISTRY_CATALOGNAMESPACE:foo-v0.3.0
+    containerImage: quay.io/oc-mirror/oc-mirror-dev:foo-v0.3.0
     description: The Foo Operator does Foo things.
     olm.skipRange: <0.3.0
     repository: https://github.com/openshift/oc-mirror
@@ -45,7 +45,7 @@ spec:
               containers:
               - command:
                 - /run.sh
-                image: REGISTRY_CATALOGNAMESPACE:foo-v0.3.0
+                image: quay.io/oc-mirror/oc-mirror-dev:foo-v0.3.0
                 imagePullPolicy: Always
                 name: foo
     strategy: deployment
@@ -69,7 +69,7 @@ spec:
   provider:
     name: Foo
   relatedImages:
-  - image: REGISTRY_CATALOGNAMESPACE:foo-v0.3.0
+  - image: quay.io/oc-mirror/oc-mirror-dev:foo-v0.3.0
     name: operator
   replaces: foo.v0.2.0
   version: 0.3.0
