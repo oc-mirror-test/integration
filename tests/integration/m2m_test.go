@@ -31,6 +31,9 @@ var _ = Describe("mirrorToMirror", func() {
 			By("verifying images are mirrored in the local registry")
 			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscHappyPath), *testRegistry)
 
+			By("verifying IDMS contains all the expected images and no empty fields")
+			expectCorrectIDMS(workDir, filepath.Join(iscDir, iscHappyPath))
+
 			By("running delete workflow - phase 1: generating delete yaml")
 			result, err = runner.DeletePhaseOne(ctx, filepath.Join(iscDir, discHappyPath), workDir, "", testRegistry.Endpoint())
 			expectOcMirrorCommandSuccess(result, err)
