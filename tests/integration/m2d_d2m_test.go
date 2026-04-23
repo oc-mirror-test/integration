@@ -8,7 +8,6 @@ import (
 
 var _ = Describe("mirrorToDisk + diskToMirror", func() {
 	var workDir string
-	deleteId := "delete-test"
 
 	BeforeEach(func() {
 		workDir = setupWorkDir()
@@ -23,7 +22,7 @@ var _ = Describe("mirrorToDisk + diskToMirror", func() {
 		discHappyPath := filepath.Join("happy_path", "disc-happy-path.yaml")
 
 		It("should mirror from remote registry to disk and then from disk to local registry", func() {
-			deleteYaml := filepath.Join(workDir, "working-dir", "delete", "delete-images-"+deleteId+".yaml")
+			deleteYaml := filepath.Join(workDir, "working-dir", "delete", "delete-images.yaml")
 
 			By("running mirrorToDisk")
 			result, err := runner.MirrorToDisk(ctx, filepath.Join(iscDir, iscHappyPath), workDir, "--remove-signatures=true")
@@ -44,11 +43,11 @@ var _ = Describe("mirrorToDisk + diskToMirror", func() {
 			expectSuccessfulMirrorInRegistry(filepath.Join(iscDir, iscHappyPath), *testRegistry)
 
 			By("running delete workflow - phase 1: generating delete yaml")
-			result, err = runner.DeletePhaseOne(ctx, filepath.Join(iscDir, discHappyPath), workDir, deleteId, testRegistry.Endpoint())
+			result, err = runner.DeletePhaseOne(ctx, filepath.Join(iscDir, discHappyPath), workDir, "", testRegistry.Endpoint())
 			expectOcMirrorCommandSuccess(result, err)
 
-			By("verifying delete images yaml was created after phase 1")
-			expectDeleteImagesYamlExists(deleteYaml)
+			By("verifying delete images files are correct")
+			expectValidDeleteImagesFiles(workDir, "")
 
 			By("running delete workflow - phase 2: delete images from registry")
 			result, err = runner.DeletePhaseTwo(ctx, deleteYaml, testRegistry.Endpoint(),
