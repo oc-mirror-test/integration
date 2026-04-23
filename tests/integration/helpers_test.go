@@ -27,7 +27,7 @@ import (
 const (
 	// releasePublicKeyFile is the GPG public key filename in the keys directory.
 	releasePublicKeyFile = "release-pk.asc"
-	platformReleaseRepo     = "openshift/release"
+	platformReleaseRepo  = "openshift/release"
 
 	dirWorkingDir = "working-dir"
 
@@ -445,6 +445,33 @@ func expectNoRepositoriesInRegistry(reg registry.Registry) {
 	repos, err := reg.ListRepositories(ctx)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(repos).To(BeEmpty(), "expected registry to have no repositories, but found: %v", repos)
+}
+
+// expectOnlyAllowedExecutableFiles walks the working directory and verifies that only files
+// under graph-preparation/ or filtered-catalog-image/ directories have executable permissions.
+func expectOnlyAllowedExecutableFiles(workDir string) {
+	err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if info.Mode()&0o111 == 0 {
+			return nil
+		}
+
+		relPath, relErr := filepath.Rel(workDir, path)
+		Expect(relErr).NotTo(HaveOccurred())
+
+		normalized := "/" + filepath.ToSlash(relPath)
+		inGraphPreparation := strings.Contains(normalized, "/graph-preparation/")
+		inFilteredCatalog := strings.Contains(normalized, "/filtered-catalog-image/")
+		Expect(inGraphPreparation || inFilteredCatalog).To(BeTrue(), "unexpected executable file: %s", relPath)
+
+		return nil
+	})
+	Expect(err).NotTo(HaveOccurred())
 }
 
 // expectCatalogBundlesMatchISC verifies that the mirrored catalog contains only the bundles
