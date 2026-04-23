@@ -3,6 +3,7 @@ package integration_test
 import (
 	"archive/tar"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/gomega"
+	configv1 "github.com/openshift/api/config/v1"
 	"github.com/operator-framework/operator-registry/alpha/declcfg"
 	"gopkg.in/yaml.v3"
 
@@ -626,16 +628,26 @@ func expectCorrectIDMS(workDir, iscPath string) {
 	var allSources []string
 
 	for {
-		var idms map[string]any
-		err := decoder.Decode(&idms)
+		var raw map[string]any
+		err := decoder.Decode(&raw)
 		if err == io.EOF {
 			break
 		}
 		Expect(err).NotTo(HaveOccurred(), "failed to parse IDMS document")
 
-		Expect(idms).To(HaveKeyWithValue("kind", "ImageDigestMirrorSet"))
-		expectNoEmptyFields(idms, "idms")
-		allSources = append(allSources, extractIDMSSources(idms)...)
+		expectNoEmptyFields(raw, "idms")
+
+		jsonBytes, err := json.Marshal(raw)
+		Expect(err).NotTo(HaveOccurred(), "failed to marshal IDMS document to JSON")
+
+		var idms configv1.ImageDigestMirrorSet
+		Expect(json.Unmarshal(jsonBytes, &idms)).To(Succeed(), "failed to unmarshal IDMS into ImageDigestMirrorSet")
+
+		Expect(idms.Kind).To(Equal("ImageDigestMirrorSet"))
+
+		for _, mirror := range idms.Spec.ImageDigestMirrors {
+			allSources = append(allSources, mirror.Source)
+		}
 	}
 
 	expectIDMSContainsExpectedContent(iscPath, allSources)
@@ -666,27 +678,6 @@ func expectNoEmptyFields(obj map[string]any, path string) {
 			}
 		}
 	}
-}
-
-// extractIDMSSources extracts source fields from spec.imageDigestMirrors in a parsed IDMS document.
-func extractIDMSSources(idms map[string]any) []string {
-	spec, ok := idms["spec"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	mirrors, ok := spec["imageDigestMirrors"].([]any)
-	if !ok {
-		return nil
-	}
-	var sources []string
-	for _, entry := range mirrors {
-		if m, ok := entry.(map[string]any); ok {
-			if source, ok := m["source"].(string); ok {
-				sources = append(sources, source)
-			}
-		}
-	}
-	return sources
 }
 
 // expectIDMSContainsExpectedContent verifies that all expected repositories from the ISC
