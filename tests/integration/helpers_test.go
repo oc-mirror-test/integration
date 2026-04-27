@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/operator-framework/operator-registry/alpha/declcfg"
 	"gopkg.in/yaml.v3"
@@ -106,6 +107,23 @@ func expectOcMirrorCommandSuccess(result *ocmirror.Result, err error) {
 func expectOcMirrorCommandFailure(result *ocmirror.Result, err error) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(result.ExitCode).NotTo(Equal(0), "expected oc-mirror to fail but it succeeded:\nstdout: %s\nstderr: %s", result.Stdout, result.Stderr)
+}
+
+// expectOcMirrorExitCode asserts that oc-mirror exited with the given code and that its
+// combined output contains every one of the provided substrings.
+func expectOcMirrorExitCode(result *ocmirror.Result, err error, expectedCode int, expectedMessages ...string) {
+	Expect(err).NotTo(HaveOccurred())
+	GinkgoWriter.Printf("oc-mirror exited with code %d (expected %d)\n", result.ExitCode, expectedCode)
+	Expect(result.ExitCode).To(Equal(expectedCode),
+		"expected exit code %d but got %d\nstdout: %s\nstderr: %s",
+		expectedCode, result.ExitCode, result.Stdout, result.Stderr)
+
+	output := result.Stdout + result.Stderr
+	for _, msg := range expectedMessages {
+		Expect(output).To(ContainSubstring(msg),
+			"expected output to contain %q\nstdout: %s\nstderr: %s",
+			msg, result.Stdout, result.Stderr)
+	}
 }
 
 // expectCorrectTarArchiveContents verifies that the tar archive contains the expected
