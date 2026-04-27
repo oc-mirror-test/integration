@@ -69,4 +69,17 @@ var _ = Describe("operators", func() {
 			expectNoRepositoriesInRegistry(*testRegistry)
 		})
 	})
+
+	Describe("file permissions after catalog rebuild", func() {
+		iscFile := filepath.Join("operators", "isc-operator-version-range.yaml")
+
+		It("should only set executable permissions on graph-preparation and filtered-catalog-image files", func() {
+			By("running mirrorToDisk to trigger catalog rebuild")
+			result, err := runner.MirrorToDisk(ctx, filepath.Join(iscDir, iscFile), workDir, "--remove-signatures=true")
+			expectOcMirrorCommandSuccess(result, err)
+
+			By("verifying only allowed files have executable permissions")
+			expectOnlyAllowedExecutableFiles(workDir)
+		})
+	})
 })
