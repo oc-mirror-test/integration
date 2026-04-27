@@ -5,7 +5,7 @@ metadata:
   annotations:
     capabilities: BasicInstall
     certified: 'false'
-    containerImage: REGISTRY_CATALOGNAMESPACE:bar-v0.1.0
+    containerImage: quay.io/oc-mirror/oc-mirror-dev:bar-v0.1.0
     description: The Bar Operator does Bar things.
     olm.skipRange: <0.1.0
     repository: https://github.com/openshift/oc-mirror
@@ -41,7 +41,7 @@ spec:
               containers:
               - command:
                 - /run.sh
-                image: REGISTRY_CATALOGNAMESPACE:bar-v0.1.0
+                image: quay.io/oc-mirror/oc-mirror-dev:bar-v0.1.0
                 imagePullPolicy: Always
                 name: bar
     strategy: deployment
@@ -65,6 +65,6 @@ spec:
   provider:
     name: Bar
   relatedImages:
-  - image: REGISTRY_CATALOGNAMESPACE:bar-v0.1.0
+  - image: quay.io/oc-mirror/oc-mirror-dev:bar-v0.1.0
     name: operator
   version: 0.1.0
