@@ -397,10 +397,29 @@ func setupWorkDir() string {
 	return workDir
 }
 
-// expectDeleteImagesYamlExists verifies that the delete images yaml file was created after delete phase 1.
-func expectDeleteImagesYamlExists(path string) {
-	_, err := os.Stat(path)
-	Expect(err).NotTo(HaveOccurred(), "delete images yaml not found at: %s", path)
+// expectValidDeleteImagesFiles verifies that delete phase 1 created the expected delete YAML files.
+// When deleteId is empty, it checks for default-named files.
+// When deleteId is set, it checks for files with the delete-id suffix and verifies the defaults do not exist.
+func expectValidDeleteImagesFiles(workDir, deleteId string) {
+	deleteDir := filepath.Join(workDir, "working-dir", "delete")
+
+	if deleteId == "" {
+		_, err := os.Stat(filepath.Join(deleteDir, "delete-images.yaml"))
+		Expect(err).NotTo(HaveOccurred(), "default delete-images.yaml not found")
+
+		_, err = os.Stat(filepath.Join(deleteDir, "delete-imageset-config.yaml"))
+		Expect(err).NotTo(HaveOccurred(), "default delete-imageset-config.yaml not found")
+		return
+	}
+
+	_, err := os.Stat(filepath.Join(deleteDir, "delete-images-"+deleteId+".yaml"))
+	Expect(err).NotTo(HaveOccurred(), "delete-images yaml with delete-id %q not found", deleteId)
+
+	_, err = os.Stat(filepath.Join(deleteDir, "delete-imageset-config-"+deleteId+".yaml"))
+	Expect(err).NotTo(HaveOccurred(), "delete-imageset-config yaml with delete-id %q not found", deleteId)
+
+	_, err = os.Stat(filepath.Join(deleteDir, "delete-images.yaml"))
+	Expect(err).To(HaveOccurred(), "default delete-images.yaml should not exist when --delete-id is set")
 }
 
 // expectValidMappingFile verifies that the dry-run mapping.txt file was created, that every line

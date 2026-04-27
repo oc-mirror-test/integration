@@ -135,9 +135,11 @@ func (r *Runner) DeletePhaseOne(ctx context.Context, configPath, workspace, dele
 		"--config", configPath,
 		"--generate",
 		"--workspace", fmt.Sprintf("file://%s", workspace),
-		"--delete-id", deleteId,
 		fmt.Sprintf("docker://%s", destRegistry),
 		"--v2",
+	}
+	if deleteId != "" {
+		args = append(args, "--delete-id", deleteId)
 	}
 	args = append(args, extraArgs...)
 	return r.Run(ctx, args...)
