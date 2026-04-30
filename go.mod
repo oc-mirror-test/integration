@@ -7,6 +7,7 @@ require (
 	github.com/google/go-containerregistry v0.20.7
 	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.39.0
+	github.com/openshift/api v0.0.0-20260105154426-319dc2e49203
 	github.com/operator-framework/operator-registry v1.50.0
 	gopkg.in/yaml.v3 v3.0.1
 )
