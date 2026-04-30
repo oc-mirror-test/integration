@@ -544,6 +544,42 @@ func expectCatalogBundlesMatchISC(ctx context.Context, reg registry.Registry, is
 	}
 }
 
+// expectRebuiltTagMatchesDigest verifies that the digest-style tag (sha256-<hash>)
+// assigned to a rebuilt catalog image matches the actual manifest digest.
+func expectRebuiltTagMatchesDigest(ctx context.Context, reg registry.Registry, iscPath string) {
+	cfg := parseImageSetConfig(iscPath)
+	digestTagPattern := regexp.MustCompile(`^sha256-[a-f0-9]{64}$`)
+
+	for _, op := range cfg.Mirror.Operators {
+		repo := extractRepositoryName(op.Catalog)
+		tags, err := reg.ListTags(ctx, repo)
+		Expect(err).NotTo(HaveOccurred(), "failed to list tags for %q", repo)
+		Expect(tags).NotTo(BeEmpty(), "expected at least one mirrored tag for %q", repo)
+
+		foundDigestStyleTag := false
+		for _, tag := range tags {
+			if !digestTagPattern.MatchString(tag) {
+				continue
+			}
+
+			foundDigestStyleTag = true
+			ref, err := name.NewTag(reg.Endpoint()+"/"+repo+":"+tag, name.Insecure)
+			Expect(err).NotTo(HaveOccurred(), "failed to create reference for %s:%s", repo, tag)
+
+			desc, err := remote.Get(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(ctx))
+			Expect(err).NotTo(HaveOccurred(), "failed to fetch manifest for %s:%s", repo, tag)
+
+			expectedTag := "sha256-" + strings.TrimPrefix(desc.Digest.String(), "sha256:")
+			Expect(tag).To(Equal(expectedTag),
+				"rebuilt tag should match manifest digest for %s: expected %q from digest %q, got %q",
+				repo, expectedTag, desc.Digest.String(), tag)
+		}
+
+		Expect(foundDigestStyleTag).To(BeTrue(),
+			"expected at least one digest-style rebuilt tag for %q, got: %v", repo, tags)
+	}
+}
+
 // extractCatalogConfigs pulls a catalog image from the registry and extracts
 // the FBC config files to a temporary directory on disk. The caller is
 // responsible for removing the returned directory when done.
