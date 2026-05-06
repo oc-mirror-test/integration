@@ -773,6 +773,91 @@ func idmsSourceCoversRef(sources []string, ref string) bool {
 	return false
 }
 
+// createAdditionalRegistryConfig creates a distribution/distribution registry configuration file
+// with the specified storage root directory and port. Use this to create additional registries
+// beyond the default testRegistry (port 5000). Each additional registry needs a unique port and storage path.
+func createAdditionalRegistryConfig(path string, storageRoot string, port int) {
+	content := fmt.Sprintf(`version: 0.1
+log:
+  accesslog:
+    disabled: true
+  level: error
+  fields:
+    service: registry
+storage:
+  delete:
+      enabled: true
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: %s
+http:
+  addr: :%d
+  headers:
+    X-Content-Type-Options: [nosniff]
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+`, storageRoot, port)
+
+	err := os.WriteFile(path, []byte(content), 0o644)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+// loadCatalogChannels loads the FBC configs from the subdirectory
+// and returns all channels for the given operator package.
+func loadCatalogChannels(ctx context.Context, configsDir, packageName string) []declcfg.Channel {
+	pkgDir := filepath.Join(configsDir, packageName)
+	cfg, err := declcfg.LoadFS(ctx, os.DirFS(pkgDir))
+	Expect(err).NotTo(HaveOccurred(), "failed to load FBC from %s", pkgDir)
+
+	var channels []declcfg.Channel
+	for _, ch := range cfg.Channels {
+		if ch.Package == packageName {
+			channels = append(channels, ch)
+		}
+	}
+	return channels
+}
+
+// expectCatalogContentValid verifies the catalog content for a package:
+// bundles match expected, channels match expected, and no duplicate channels.
+func expectCatalogContentValid(ctx context.Context, reg registry.Registry, catalogRef, packageName string, expectedBundles, expectedChannels []string) {
+	configsDir := extractCatalogConfigs(ctx, reg, catalogRef)
+	defer os.RemoveAll(configsDir)
+
+	bundles := loadCatalogBundles(ctx, configsDir, packageName)
+	Expect(bundles).NotTo(BeEmpty(),
+		"no bundles found for package %q in catalog %s", packageName, catalogRef)
+
+	var actualBundles []string
+	for _, b := range bundles {
+		actualBundles = append(actualBundles, b.Name)
+	}
+	Expect(actualBundles).To(ConsistOf(expectedBundles),
+		"mirrored bundles for package %q do not match expected set", packageName)
+
+	channels := loadCatalogChannels(ctx, configsDir, packageName)
+	Expect(channels).NotTo(BeEmpty(),
+		"no channels found for package %q in catalog %s", packageName, catalogRef)
+
+	var actualChannels []string
+	seen := make(map[string]int)
+	for _, ch := range channels {
+		actualChannels = append(actualChannels, ch.Name)
+		seen[ch.Name]++
+	}
+	Expect(actualChannels).To(ConsistOf(expectedChannels),
+		"mirrored channels for package %q do not match expected set", packageName)
+
+	for chName, count := range seen {
+		Expect(count).To(Equal(1),
+			"duplicate channel %q found %d times for package %q", chName, count, packageName)
+	}
+}
+
 func isOCMirrorVersionBefore(major int, minor int) bool {
 	ver := os.Getenv("OC_MIRROR_VERSION")
 	if ver == "" || ver == "main" {
